@@ -1,0 +1,101 @@
+use ::BBjWidget/BBjWidget.bbj::BBjWidget
+use ::AuthKit/profile/GoogleAccountProfile.bbj::GoogleAccountProfile
+use ::AuthKit/profile/AccountProfile.bbj::AccountProfile
+
+use com.google.api.client.googleapis.auth.oauth2.GoogleIdToken
+use com.google.api.client.json.jackson2.JacksonFactory
+
+class public GoogleLoginWidget extends BBjWidget
+
+    field private BBjHtmlView HtmlView!
+    field private GoogleAccountProfile Profile!
+    
+    field public static BBjNumber ON_LOGIN = 6777
+    
+
+    method public GoogleLoginWidget(BBjWindow wnd!,BBjInt id!)
+        #super!.create(wnd!,id!)
+    methodend
+
+    method public GoogleLoginWidget(BBjWindow wnd!, BBjInt id!, BBjInt x!, BBjInt y!, BBjInt w!, BBjInt h!)
+        #super!.create(wnd!,id!,x!, y!, w!, h!)
+    methodend
+
+    rem /**
+    rem  * @Override
+    rem  * This method is called whenever the widget needs to be rendered
+    rem  * @param Boolean f_init!: if TRUE the control is rendered for the first time so this method has to perform initial rendering
+    rem  */
+    method public void redraw(Boolean f_init!)
+        
+        wnd! = #getCanvas()
+        
+        if f_init!>0 then
+            html$ = "<html><head>
+:           <meta name='google-signin-client_id' content='862999103108-q9vsolubod0smuupqfhphm3be7jed86p.apps.googleusercontent.com'>
+:           </head>
+:           <body>
+:           <div class='g-signin2' data-onsuccess='onSignIn' id='myP'></div>
+:           <button id='logout' style='display:none;' onClick='gapi.auth2.getAuthInstance().disconnect();'>logout</button>
+:           </body></html>"
+
+            html! = wnd!.addHtmlView(100,0,0,#W!,#H!,"")
+            html!.setNoEdge(1)
+            html!.setCallback(BBjAPI.ON_NATIVE_JAVASCRIPT,#this!,"onJs")
+            html!.setCallback(BBjAPI.ON_PAGE_LOADED,#this!,"onPageLoaded")
+            html!.setText(html$)
+            #HtmlView! = CAST(BBjHtmlView,html!)
+        FI
+        
+    methodend
+
+    method public void onJs( BBjNativeJavaScriptEvent ev! )
+          buffer! = ev!.getEventMap() 
+          token$=buffer!.get("token")
+          token! = GoogleIdToken.parse(new JacksonFactory(), token$)
+          payload! = token!.getPayload()
+          #Profile! = new GoogleAccountProfile(payload!)
+          #super!.fireEvent(GoogleLoginWidget.ON_LOGIN,#Profile!)
+    methodend
+    
+    method public void onPageLoaded ( BBjPageLoadedEvent ev! )
+
+         bui = info(3,6)>"4"
+         doc$ = iff(bui,"$doc","document")
+         wnd$ = iff(bui,"$wnd","window")
+
+        #HtmlView!.clearCallback(BBjAPI.ON_PAGE_LOADED)
+
+        scr$="  function onSignIn(googleUser) {
+:            var profile = googleUser.getBasicProfile();
+:            var name=profile.getName();
+:            var email=profile.getEmail();
+:            var token = googleUser.getAuthResponse().id_token;
+:            var custom=new CustomEvent('custom_event',{bubbles:true,cancelable:true});
+:            custom.myElement='jsfunction'; custom.profileName = name;
+:            custom.email=email; custom.token = token;
+:            var element=document.getElementById('myP');
+:            window.basisDispatchCustomEvent(element,custom);}"
+
+
+        #HtmlView!.injectScript(scr$,1)
+
+
+        #HtmlView!.executeScript("var script = "+doc$+".createElement('script');
+:           script.type = 'text/javascript';
+:           script.src = 'https://apis.google.com/js/platform.js';
+:           "+doc$+".head.appendChild(script)")    
+    
+    methodend
+    
+    method public AccountProfile getProfile()
+        methodret #Profile!
+    methodend
+    
+    method public void logout()
+            #HtmlView!.executeScript("gapi.auth2.getAuthInstance().disconnect();")
+            #HtmlView!.executeScript("$doc.getElementById('logout').click();")
+            #Profile! = null()
+    methodend
+    
+classend

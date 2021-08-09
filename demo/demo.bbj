@@ -1,0 +1,75 @@
+use ::AuthKit/profile/GoogleAccountProfile.bbj::GoogleAccountProfile
+use ::AuthKit/widgets/GoogleLoginWidget.bbj::GoogleLoginWidget
+
+use ::AuthKit/profile/MicrosoftAccountProfile.bbj::MicrosoftAccountProfile
+use ::AuthKit/widgets/MicrosoftLoginWidget.bbj::MicrosoftLoginWidget
+
+sysgui! = BBjAPI().openSysGui("X0")
+wnd! = sysgui!.addWindow(0,0,800,600,"AuthKit Demo")
+wnd!.setCallback(BBjAPI.ON_CLOSE,"byebye")
+
+rem Google
+GoogleLoginWidget! = new GoogleLoginWidget(wnd!,wnd!.getAvailableControlID(),10,80,130,45)
+GoogleLoginWidget!.setCallback(GoogleLoginWidget.ON_LOGIN,"onGoogleLogin")
+
+GoogleAvatar! = wnd!.addChildWindow(wnd!.getAvailableControlID(),180,70,40,60,"",$00000800$,sysgui!.getAvailableContext())
+GoogleAvatar!.setStyle("height","50px")
+GoogleAvatar!.setStyle("width","50px")
+GoogleAvatar!.setStyle("border-radius","50%")
+GoogleAvatar!.setStyle("background-image","none")
+GoogleAvatar!.setStyle("background-size","50px")
+
+GoogleInfo! = wnd!.addStaticText(wnd!.getAvailableControlID(),250,85,300,30,"")
+ 
+GoogleLogoutBtn! = wnd!.addButton(wnd!.getAvailableControlID(),590,80,200,25,"Logout from Google")
+GoogleLogoutBtn!.setCallback(BBjAPI.ON_BUTTON_PUSH,"onGoogleLogout")
+
+rem Microsoft
+MicrosoftLoginWidget! = new MicrosoftLoginWidget(wnd!,wnd!.getAvailableControlID(),10,200,130,45)
+MicrosoftLoginWidget!.setCallback(MicrosoftLoginWidget.ON_LOGIN,"onMicrosoftLogin")
+
+MicrosoftAvatar! = wnd!.addChildWindow(wnd!.getAvailableControlID(),180,190,60,60,"",$00000800$,sysgui!.getAvailableContext())
+MicrosoftAvatar!.setStyle("height","50px")
+MicrosoftAvatar!.setStyle("width","50px")
+MicrosoftAvatar!.setStyle("border-radius","50%")
+MicrosoftAvatar!.setStyle("background-image","none")
+MicrosoftAvatar!.setStyle("background-size","50px")
+
+MicrosoftInfo! = wnd!.addStaticText(wnd!.getAvailableControlID(),250,205,300,30,"")
+ 
+MicrosoftLogoutBtn! = wnd!.addButton(wnd!.getAvailableControlID(),590,200,200,25,"Logout from Microsoft")
+MicrosoftLogoutBtn!.setCallback(BBjAPI.ON_BUTTON_PUSH,"onMicrosoftLogout")
+
+
+process_events
+
+byebye:
+    release
+
+onGoogleLogout:
+   GoogleLoginWidget!.logout()
+   GoogleAvatar!.setStyle("background-image","none")
+   GoogleInfo!.setText("")
+return
+
+onGoogleLogin:
+    ev! = BBjAPI().getLastEvent()
+    GoogleProfile! = ev!.getObject()
+    GoogleAvatar!.setStyle("background-image","url("+GoogleProfile!.getPictureUrl()+")")
+    GoogleInfo!.setText(GoogleProfile!.getFullName()+ " ("+GoogleProfile!.getEMail()+")")
+return
+
+
+
+onMicrosoftLogout:
+   MicrosoftLoginWidget!.logout()
+   MicrosoftAvatar!.setStyle("background-image","none")
+   MicrosoftInfo!.setText("")
+return
+
+onMicrosoftLogin:
+    ev! = BBjAPI().getLastEvent()
+    MicrosoftProfile! = ev!.getObject()
+    MicrosoftAvatar!.setStyle("background-image","url("+MicrosoftProfile!.getPictureUrl()+")")
+    MicrosoftInfo!.setText(MicrosoftProfile!.getFullName()+ " ("+MicrosoftProfile!.getEMail()+")")
+return

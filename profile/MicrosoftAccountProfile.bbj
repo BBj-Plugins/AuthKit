@@ -1,0 +1,115 @@
+use ::AuthKit/profile/AccountProfile.bbj::AccountProfile
+use com.google.gson.JsonParser
+use java.io.BufferedReader
+use java.io.InputStreamReader
+use java.net.HttpURLConnection
+use java.net.URL
+use java.util.Base64
+use org.apache.commons.io.FileUtils
+use java.io.File
+
+class public MicrosoftAccountProfile extends AccountProfile
+
+    method private MicrosoftAccountProfile()
+    methodend
+
+    method public MicrosoftAccountProfile(BBjString token!)
+        #buildWithAccessToken(token!)
+    methodend
+
+    method private void buildWithAccessToken(BBjString token!)
+
+        url! = new URL("https://graph.microsoft.com/v1.0/me/")
+        conn! = url!.openConnection()
+        conn!.setRequestMethod("GET")
+        conn!.setRequestProperty("Authorization", "Bearer " + str(token!))
+        conn!.setRequestProperty("Accept", "application/json")
+        br! = new BufferedReader(new InputStreamReader(conn!.getInputStream()))
+        loop:
+        output! = br!.readLine() 
+        if output! <> null () then
+                x$=x$+output!
+                goto loop
+        fi
+        conn!.disconnect()      
+            
+        jobj! = new JsonParser().parse(x$)
+        
+        #AuthProvider!  = "Microsoft"
+        #FirstName!     = #trimQuotes(jobj!.get("givenName").toString())
+        #LastName!      = #trimQuotes(jobj!.get("surname").toString())
+        #FullName!      = #trimQuotes(jobj!.get("displayName").toString())
+        #EMail!         = #trimQuotes(jobj!.get("userPrincipalName").toString())
+        if jobj!.get("prferredLanguage") <> null() then
+            #Locale!        = #trimQuotes(jobj!.get("prferredLanguage").toString())
+        fi
+        
+        x$=""
+        url! = new URL("https://graph.microsoft.com/v1.0/me/photo/$value")
+        conn! = url!.openConnection()
+        conn!.setRequestMethod("GET")
+        conn!.setRequestProperty("Authorization", "Bearer " + str(token!))
+        conn!.setRequestProperty("Accept", "*/*")
+        
+        
+        havePic=0
+        
+        is! = conn!.getInputStream(err=nophoto)
+        buffer! = new byte[4096]
+        sb! = new java.lang.StringBuilder()
+        
+        loop1:
+        n = is!.read(buffer!)
+        if n>-1 then
+            sb!.append(buffer!,0,n)
+            goto loop1
+        fi
+        
+        havePic=1
+        
+        nophoto:
+        conn!.disconnect(err=*next)   
+        
+        if havePic=0 then
+            #PictureUrl! = null()
+        else
+            x! = sb!.toString()
+            
+            rem todo: figure out how to do this without an intermediate file, so that the B64 string 
+            rem does not produce garbled output
+            
+            tmpf! = File.createTempFile("pic-","jpg")
+            tmpf!.deleteOnExit()
+            p$ = tmpf!.getAbsolutePath()
+            
+            ch=unt
+            open (ch,mode="O_CREATE,O_TRUNC")p$
+            write (ch)x!
+            close (ch)
+
+            fileContent! = FileUtils.readFileToByteArray(tmpf!)
+            tmpf!.delete()
+            
+            encodedString! = Base64.getEncoder().encodeToString(fileContent!)
+            #PictureUrl!    = "data:image/jpeg;base64,"+encodedString!
+        fi
+    methodend
+    
+    method private BBjString trimQuotes(BBjString txt!)
+        if txt!.startsWith("""") then
+            txt! = str(txt!)(2)
+        fi
+        if txt!.endsWith("""") then
+            txt! = str(txt!)(1,len(txt!)-1)
+        fi
+        methodret txt!
+    methodend
+classend
+
+
+
+token$="eyJ0eXAiOiJKV1QiLCJub25jZSI6IjR4NW81ejV5cl9PZU54QkR4dEhxeW54QVcteDVmdll3dkxud1ZTQXNJeGMiLCJhbGciOiJSUzI1NiIsIng1dCI6Im5PbzNaRHJPRFhFSzFqS1doWHNsSFJfS1hFZyIsImtpZCI6Im5PbzNaRHJPRFhFSzFqS1doWHNsSFJfS1hFZyJ9.eyJhdWQiOiIwMDAwMDAwMy0wMDAwLTAwMDAtYzAwMC0wMDAwMDAwMDAwMDAiLCJpc3MiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC84NDIzNjZiOC04MDExLTQ4MzMtOTUyMi1hZmRkZjMyNzlmNTcvIiwiaWF0IjoxNjI4NTA0Njc2LCJuYmYiOjE2Mjg1MDQ2NzYsImV4cCI6MTYyODUwODU3NiwiYWNjdCI6MCwiYWNyIjoiMSIsImFjcnMiOlsidXJuOnVzZXI6cmVnaXN0ZXJzZWN1cml0eWluZm8iLCJ1cm46bWljcm9zb2Z0OnJlcTEiLCJ1cm46bWljcm9zb2Z0OnJlcTIiLCJ1cm46bWljcm9zb2Z0OnJlcTMiLCJjMSIsImMyIiwiYzMiLCJjNCIsImM1IiwiYzYiLCJjNyIsImM4IiwiYzkiLCJjMTAiLCJjMTEiLCJjMTIiLCJjMTMiLCJjMTQiLCJjMTUiLCJjMTYiLCJjMTciLCJjMTgiLCJjMTkiLCJjMjAiLCJjMjEiLCJjMjIiLCJjMjMiLCJjMjQiLCJjMjUiXSwiYWlvIjoiQVNRQTIvOFRBQUFBN2szb1RJS2NQblBRRi9DbG1vUFUyVTlBcjU5SElDZUgzY1dka0VqV3ljVT0iLCJhbXIiOlsicHdkIl0sImFwcF9kaXNwbGF5bmFtZSI6IkJCakxvZ2luRGVtbyIsImFwcGlkIjoiZmZhOGQwNDgtYjk0Ny00ZTRjLWEwNGYtOTllMDU4Mjg1YTQ0IiwiYXBwaWRhY3IiOiIwIiwiZmFtaWx5X25hbWUiOiJXYWxkIiwiZ2l2ZW5fbmFtZSI6IlN0ZXBoYW4iLCJpZHR5cCI6InVzZXIiLCJpcGFkZHIiOiI3OS4yMzQuMTU1LjQ3IiwibmFtZSI6IlN0ZXBoYW4gV2FsZCIsIm9pZCI6IjViMWRkYjFkLTc4NmYtNGU1Zi1hZDZlLTEzZTEzMTA5NzI2YiIsInBsYXRmIjoiMyIsInB1aWQiOiIxMDAzMjAwMEE3QkVCNzM3IiwicmgiOiIwLkFURUF1R1lqaEJHQU0waVZJcV9kOHllZlYwalFxUDlIdVV4T29FLVo0RmdvV2tReEFCay4iLCJzY3AiOiJvcGVuaWQgcHJvZmlsZSBVc2VyLlJlYWQgZW1haWwiLCJzaWduaW5fc3RhdGUiOlsia21zaSJdLCJzdWIiOiJDQk5talNnUE9RQmgybjNkN2F2ajUtLTM2a1ZiR3ViZkZVMllkckttMmQ0IiwidGVuYW50X3JlZ2lvbl9zY29wZSI6IkVVIiwidGlkIjoiODQyMzY2YjgtODAxMS00ODMzLTk1MjItYWZkZGYzMjc5ZjU3IiwidW5pcXVlX25hbWUiOiJzdGVwaGFuLndhbGRAYi0tcC5kZSIsInVwbiI6InN0ZXBoYW4ud2FsZEBiLS1wLmRlIiwidXRpIjoia0V2SW05VnBKMEc2ZTNSSzRqb2lBUSIsInZlciI6IjEuMCIsIndpZHMiOlsiYjc5ZmJmNGQtM2VmOS00Njg5LTgxNDMtNzZiMTk0ZTg1NTA5Il0sInhtc19zdCI6eyJzdWIiOiJ2eHBudWtIRFZNV0J5RXlMNmEyLXpybno2TXJqM3J0MTQxMHRUYzZCMTJRIn0sInhtc190Y2R0IjoxNTM2NTc1MTMxfQ.SzbymWiUAAs4gotnd51OoxPvOTbbfUtvTHxtAjMXcEFrHhdVVma0xBM0GEwJQ_ku9FHk-cHBNHEn9hREu9S0nR5RWBav3OVDqZYsiWDIrNJJqG4oZODMl0Teq5wESXmd6s5VQHVwpA9lViBx5eLl7YJHHnd6DvKEIKGKObxGZL-tDSxXJL-HNEocso8pdxDX5CktoWb2Pufeulv7_iCZmh9GHL29cSxqXteaY0XookZrVyFYJZFlAC1ooH1-sUke5WjAD3fmbs6vCQPLuUx253iNuETO1d3ip9eghhSp6GH9XoN1-UmXqh33sFfa8RdWQ0cWTo0Uu8lBHceIj2d0Dg"
+msp! = new MicrosoftAccountProfile(token$)
+print "Weiter",
+wait 2
+release

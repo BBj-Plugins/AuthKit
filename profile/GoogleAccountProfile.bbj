@@ -1,0 +1,19 @@
+use ::AuthKit/profile/AccountProfile.bbj::AccountProfile
+
+class public GoogleAccountProfile extends AccountProfile
+
+    method private GoogleAccountProfile()
+    methodend
+
+    method public GoogleAccountProfile(com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload payload!)
+        #FirstName!     = str(payload!.get("given_name"))
+        #LastName!      = str(payload!.get("family_name"))
+        #FullName!      = str(payload!.get("name"))
+        #EMail!         = str(payload!.get("email"))
+        #Locale!        = str(payload!.get("locale"))
+        #PictureUrl!    = str(payload!.get("picture"))
+        #AuthProvider!  = "Google"
+    methodend
+
+    
+classend
