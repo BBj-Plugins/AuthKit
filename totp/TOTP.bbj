@@ -1,0 +1,142 @@
+use java.lang.reflect.UndeclaredThrowableException
+use java.math.BigInteger
+use java.security.GeneralSecurityException
+use javax.crypto.Mac
+use javax.crypto.spec.SecretKeySpec
+
+use java.io.UnsupportedEncodingException
+use java.net.URLEncoder
+use java.security.SecureRandom
+
+use java.lang.Byte
+
+use org.apache.commons.codec.binary.Base32
+use org.apache.commons.codec.binary.Hex
+
+
+REM /**
+REM  * TOTP implementation
+REM  * algorithm and concept based on https://github.com/taimos/totp
+REM  */
+class public TOTP
+
+    method private TOTP()
+    methodend
+
+    method public static String getOTP(String secret!)
+        methodret TOTP.getOTP(TOTP.getStep(), secret!)
+    methodend
+    REM     /**
+    REM      * @param key - secret credential key (HEX)
+    REM      * @param otp - OTP to validate
+    REM      * @methodret valid?
+    REM      */
+    method public static boolean validate(String secret!,  String otp!)
+        methodret TOTP.validate(TOTP.getStep(), secret!, otp!)
+    methodend
+
+    method private static boolean validate( long step!,  String secret!,  String otp!)
+        methodret TOTP.getOTP(step!, secret!).equals(otp!) OR TOTP.getOTP(step! - 1, secret!).equals(otp!)
+    methodend
+
+    method private static long getStep()
+        rem  30 seconds StepSize (ID TOTP)
+        methodret System.currentTimeMillis() / 30000
+    methodend
+
+    method private static String getOTP( long step!,  String secret!)
+        steps! = Long.toHexString(step!).toUpperCase()
+        while (steps!.length() < 16)
+            steps! = "0" + steps!
+        wend
+        rem Get the HEX in a Byte[]
+        msg! = TOTP.hexStr2Bytes(steps!)
+        k! = TOTP.hexStr2Bytes(secret!)
+        hash! = TOTP.hmac_sha1(k!, msg!)
+        
+        hash$=new String(hash!)
+        hhash$=hta(hash$)
+        tmp$=hhash$(len(hhash$),1)
+        offset! = dec(AND(ath(tmp$), $F$))
+        
+        b1 = Byte.toUnsignedInt(hash![offset!])
+        bin1$=ath(hta(AND(chr(b1),$7F$))+"000000")
+        
+        b2 = Byte.toUnsignedInt(hash![offset! + 1])
+        bin2$=ath("00"+hta(AND(chr(b2),$FF$))+"0000")
+        
+        b3 = Byte.toUnsignedInt(hash![offset! + 2])
+        bin3$=ath("0000"+hta(AND(chr(b3),$FF$))+"00")
+       
+        b4 = Byte.toUnsignedInt(hash![offset! + 3])
+        bin4$=ath("000000"+hta(AND(chr(b4),$FF$)))
+        
+        binary$=xor(xor(xor(bin1$,bin2$),bin3$),bin4$)
+        result!=str(mod(asc(binary$(4,1))+asc(binary$(3,1))*256+asc(binary$(2,1))*65536+asc(binary$(1,1))*16777216, 1000000))
+
+        while result!.length() < 6
+            result! = "0" + result!
+        wend
+            
+        methodret result!
+    methodend
+    REM     /**
+    REM      * This method converts HEX string to Byte[]
+    REM      *
+    REM      * @param hex the HEX string
+    REM      *
+    REM      * @methodret A byte array
+    REM      */
+    method private static byte[] hexStr2Bytes( String hex!)
+        rem // Adding one byte to get the right conversion
+        rem // values starting with "0" can be converted
+        bArray! = new BigInteger("10" + hex!, 16).toByteArray()
+        ret! = new byte[bArray!.length - 1]
+        rem // Copy all the REAL bytes, not the "first"
+        System.arraycopy(bArray!, 1, ret!, 0, ret!.length)
+        methodret ret!
+    methodend
+    REM     /**
+    REM      * This method uses the JCE to provide the crypto algorithm. HMAC computes a Hashed Message Authentication Code with the crypto hash
+    REM      * algorithm as a parameter.
+    REM      *
+    REM      * @param crypto the crypto algorithm (HmacSHA1, HmacSHA256, HmacSHA512)
+    REM      * @param keyBytes the bytes to use for the HMAC key
+    REM      * @param text the message or text to be authenticated.
+    REM      */
+    method private static byte[] hmac_sha1( byte[] keyBytes!,  byte[] text!)
+        hmac! = Mac.getInstance("HmacSHA1")
+        MacKey! = new SecretKeySpec(keyBytes!, "RAW")
+        hmac!.init(MacKey!)
+        methodret hmac!.doFinal(text!)
+    methodend
+
+
+
+    method public static String generateSecretKey() 
+        random! = new SecureRandom()
+        bytes! = new byte[20]
+        random!.nextBytes(bytes!)
+        base32! = new Base32()
+        methodret base32!.encodeToString(bytes!)
+    methodend
+    
+    
+    method public static String getTOTPCode(String secretKey!)
+        base32! = new Base32()
+        bytes! = base32!.decode(secretKey!)
+        hexKey! = Hex.encodeHexString(bytes!)
+        methodret TOTP.getOTP(hexKey!)
+    methodend
+        
+    method public static String getAuthenticatorBarCode(String secretKey!, String account!, String issuer!) 
+            methodret "otpauth://totp/"
+:           + URLEncoder.encode(issuer! + ":" + account!, "UTF-8").replace("+", "%20")
+:                    + "?secret=" + URLEncoder.encode(secretKey!, "UTF-8").replace("+", "%20")
+:                    + "&issuer=" + URLEncoder.encode(issuer!, "UTF-8").replace("+", "%20")
+
+        methodend
+
+
+classend
+

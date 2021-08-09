@@ -1,0 +1,92 @@
+use ::AuthKit/totp/TOTP.bbj::TOTP
+use ::QRCodes/QRCodes.bbj::QRCodes
+
+sg! = BBjAPI().openSysGui("X0")
+wnd! = sg!.addWindow(10,10,800,600,"TOTP Demo")
+wnd!.setCallback(BBjAPI.ON_CLOSE,"byebye")
+
+wnd!.addStaticText(wnd!.getAvailableControlID(),10,10,400,25,"1. Fill in Information and Press 'Create TOTP':")
+
+wnd!.addStaticText(wnd!.getAvailableControlID(),10,50,100,25,"Account:")
+ed_account! = wnd!.addEditBox(wnd!.getAvailableControlID(),110,50,200,25,"demo@someaccount.com")
+wnd!.addStaticText(wnd!.getAvailableControlID(),10,90,100,25,"Issuer:")
+ed_issuer! = wnd!.addEditBox(wnd!.getAvailableControlID(),110,90,200,25,"BBj Demo App")
+
+wnd!.addStaticText(wnd!.getAvailableControlID(),390,10,400,25,"2. Scan QR Code with Authenticator App:")
+
+btn! = wnd!.addButton(wnd!.getAvailableControlID(),10,140,100,25,"Create TOTP")
+btn!.setCallback(BBjAPI.ON_BUTTON_PUSH,"startTotp")
+
+
+wnd!.addStaticText(wnd!.getAvailableControlID(),10,300,300,25,"3. Test Code from Authenticator App:")
+
+wnd!.addStaticText(wnd!.getAvailableControlID(),10,350,100,25,"Verify Code:")
+ipn_verify! = wnd!.addInputE(wnd!.getAvailableControlID(),110,350,100,25,$0001$,"000000")
+ipn_verify!.setCallback(BBjAPI.ON_EDIT_MODIFY,"clearColor")
+
+
+
+
+btn_verify! = wnd!.addButton(1,10,440,100,25,"Verify Code",$0001$)
+btn_verify!.setCallback(BBjAPI.ON_BUTTON_PUSH,"verifyTotp")
+
+result_verify! = wnd!.addStaticText(wnd!.getAvailableControlID(),250,350,100,25,"")
+
+red! =BBjAPI().makeColor("RED")
+blue! =BBjAPI().makeColor("BLUE")
+
+process_events
+
+byebye: 
+    bye
+
+startTotp:
+
+rem create some random secret
+rem save this with the account in the application, 
+rem you will need it to verify the TOTP code 
+secret! = TOTP.generateSecretKey()
+
+account$ = ed_account!.getText()
+issuer$ =  ed_issuer!.getText()
+
+url$=TOTP.getAuthenticatorBarCode(secret!,account$,issuer$)
+bytes! = QRCodes.getQRCode(url$,400,400)
+
+qrimg! = sg!.getImageManager().loadImageFromBytes(bytes!)
+if qr! = null() then
+    qr! = wnd!.addImageCtrl(wnd!.getAvailableControlID(),390,30,400,400,qrimg!)
+else
+    qr!.setImage(qrimg!)
+fi    
+ipn_verify!.setEnabled(1)
+ipn_verify!.focus()
+btn_verify!.setEnabled(1)
+
+
+return
+
+
+verifyTotp:
+    inp_code$ = ipn_verify!.getText()
+    while len(inp_code$)<6
+        inp_code$="0"+inp_code$
+    wend
+    
+    code$ = TOTP.getTOTPCode(secret!)
+
+    if inp_code$ = code$ then
+        result_verify!.setForeColor(blue!)
+        result_verify!.setText("CODE OK")
+    else
+        result_verify!.setForeColor(red!)
+        result_verify!.setText("CODE WRONG")
+    fi
+    
+    ipn_verify!.selectAll()
+    
+return
+
+clearColor:
+    result_verify!.setText("")
+return
