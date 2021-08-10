@@ -9,33 +9,58 @@ wnd! = sysgui!.addWindow(0,0,800,600,"AuthKit Demo")
 wnd!.setCallback(BBjAPI.ON_CLOSE,"byebye")
 
 rem Google
-GoogleLoginWidget! = new GoogleLoginWidget(wnd!,wnd!.getAvailableControlID(),10,80,130,45)
+
+rem this is a demo account provided by BASIS - don't use for production!
+GoogleLoginWidget.setCLIENTID("862999103108-q9vsolubod0smuupqfhphm3be7jed86p.apps.googleusercontent.com")
+
+GoogleLoginWidget! = new GoogleLoginWidget(wnd!,wnd!.getAvailableControlID(),10,80,180,33)
 GoogleLoginWidget!.setCallback(GoogleLoginWidget.ON_LOGIN,"onGoogleLogin")
 
-GoogleAvatar! = wnd!.addChildWindow(wnd!.getAvailableControlID(),180,70,40,60,"",$00000800$,sysgui!.getAvailableContext())
+GoogleAvatar! = wnd!.addChildWindow(wnd!.getAvailableControlID(),200,70,40,60,"",$00000800$,sysgui!.getAvailableContext())
 GoogleAvatar!.setStyle("height","50px")
 GoogleAvatar!.setStyle("width","50px")
 GoogleAvatar!.setStyle("border-radius","50%")
 GoogleAvatar!.setStyle("background-image","none")
 GoogleAvatar!.setStyle("background-size","50px")
 
-GoogleInfo! = wnd!.addStaticText(wnd!.getAvailableControlID(),250,85,300,30,"")
+GoogleInfo! = wnd!.addStaticText(wnd!.getAvailableControlID(),280,85,300,30,"")
  
 GoogleLogoutBtn! = wnd!.addButton(wnd!.getAvailableControlID(),590,80,200,25,"Logout from Google")
 GoogleLogoutBtn!.setCallback(BBjAPI.ON_BUTTON_PUSH,"onGoogleLogout")
 
+
 rem Microsoft
-MicrosoftLoginWidget! = new MicrosoftLoginWidget(wnd!,wnd!.getAvailableControlID(),10,200,130,45)
+
+rem find these values as you have configured it under
+rem https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationsListBlade 
+
+rem this is a demo account provided by BASIS - don't use for production!
+MicrosoftLoginWidget.setCLIENTID("ffa8d048-b947-4e4c-a04f-99e058285a44")
+
+rem see https://docs.microsoft.com/en-us/azure/active-directory/develop/msal-client-application-configuration
+MicrosoftLoginWidget.setAUTHORITY("https://login.microsoftonline.com/common")
+
+rem the REDIRECTURL needs to match the domain name where you host the application
+rem if you host the application under https://my.app.com/webapp/something then make sure
+rem to put something like "https://my.app.com/xxx" here 
+rem if you observe that the login dialog does not close after login then a misconfiguration here is 
+rem most likely the reason!
+rem production apps will only work with valid https:// URLs !!
+rem the demo app is registered to allow for this:
+MicrosoftLoginWidget.setREDIRECTURI("http://localhost:8888/files")
+
+
+MicrosoftLoginWidget! = new MicrosoftLoginWidget(wnd!,wnd!.getAvailableControlID(),10,200,180,33)
 MicrosoftLoginWidget!.setCallback(MicrosoftLoginWidget.ON_LOGIN,"onMicrosoftLogin")
 
-MicrosoftAvatar! = wnd!.addChildWindow(wnd!.getAvailableControlID(),180,190,60,60,"",$00000800$,sysgui!.getAvailableContext())
+MicrosoftAvatar! = wnd!.addChildWindow(wnd!.getAvailableControlID(),200,190,60,60,"",$00000800$,sysgui!.getAvailableContext())
 MicrosoftAvatar!.setStyle("height","50px")
 MicrosoftAvatar!.setStyle("width","50px")
 MicrosoftAvatar!.setStyle("border-radius","50%")
 MicrosoftAvatar!.setStyle("background-image","none")
 MicrosoftAvatar!.setStyle("background-size","50px")
 
-MicrosoftInfo! = wnd!.addStaticText(wnd!.getAvailableControlID(),250,205,300,30,"")
+MicrosoftInfo! = wnd!.addStaticText(wnd!.getAvailableControlID(),280,205,300,30,"")
  
 MicrosoftLogoutBtn! = wnd!.addButton(wnd!.getAvailableControlID(),590,200,200,25,"Logout from Microsoft")
 MicrosoftLogoutBtn!.setCallback(BBjAPI.ON_BUTTON_PUSH,"onMicrosoftLogout")

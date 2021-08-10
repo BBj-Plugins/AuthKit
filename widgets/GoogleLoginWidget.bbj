@@ -12,6 +12,9 @@ class public GoogleLoginWidget extends BBjWidget
     
     field public static BBjNumber ON_LOGIN = 6777
     
+    field public static BBjString CLIENTID$ = ""
+    
+    
 
     method public GoogleLoginWidget(BBjWindow wnd!,BBjInt id!)
         #super!.create(wnd!,id!)
@@ -31,13 +34,17 @@ class public GoogleLoginWidget extends BBjWidget
         wnd! = #getCanvas()
         
         if f_init!>0 then
-            html$ = "<html><head>
-:           <meta name='google-signin-client_id' content='862999103108-q9vsolubod0smuupqfhphm3be7jed86p.apps.googleusercontent.com'>
-:           </head>
-:           <body>
-:           <div class='g-signin2' data-onsuccess='onSignIn' id='myP'></div>
-:           <button id='logout' style='display:none;' onClick='gapi.auth2.getAuthInstance().disconnect();'>logout</button>
+        
+            ch=unt
+            open (ch)"AuthKit/lib/svg/Element 10.svg"
+            read record (ch,siz=dec(fin(ch)(1,4)))svg$
+            close (ch)
+
+            html$ = "<html><body>
+:           <div style='width:"+str(#W!-10)+"px; height:"+str(#H!-8)+"px;' id='myGoogleP'>"+svg$+"</div>
+:           <button style='width:1px; height:1px;display:none;' id='logout' onClick='gapi.auth2.getAuthInstance().disconnect();'>logout</button>
 :           </body></html>"
+
 
             html! = wnd!.addHtmlView(100,0,0,#W!,#H!,"")
             html!.setNoEdge(1)
@@ -59,14 +66,44 @@ class public GoogleLoginWidget extends BBjWidget
     methodend
     
     method public void onPageLoaded ( BBjPageLoadedEvent ev! )
+         #HtmlView!.clearCallback(BBjAPI.ON_PAGE_LOADED)
+         #HtmlView!.setCallback(BBjAPI.ON_PAGE_LOADED,#this!,"onPageLoaded2")
 
+            bui = info(3,6)>"4"
+            doc$ = iff(bui,"$doc","document")
+            wnd$ = iff(bui,"$wnd","window")
+            #HtmlView!.executeScript("var script = "+doc$+".createElement('script');
+:           script.type = 'text/javascript';
+:           script.src = 'https://apis.google.com/js/api:client.js';
+:           "+doc$+".head.appendChild(script)")            
+         wait .2
+    
+    methodend
+    
+    method public void onPageLoaded2 ( BBjPageLoadedEvent ev! )         
+         
          bui = info(3,6)>"4"
          doc$ = iff(bui,"$doc","document")
          wnd$ = iff(bui,"$wnd","window")
 
-        #HtmlView!.clearCallback(BBjAPI.ON_PAGE_LOADED)
+        
+        #HtmlView!.injectScript(scr$,1)
 
-        scr$="  function onSignIn(googleUser) {
+scr$="  var googleUser = {};
+:  var startApp = function() {
+:    gapi.load('auth2', function(){
+:      auth2 = gapi.auth2.init({
+:        client_id: '"+#CLIENTID$+"',
+:        cookiepolicy: 'single_host_origin',
+:      });
+:      attachSignin(document.getElementById('myGoogleP'));
+:    });
+:  };
+:
+:  function attachSignin(element) {
+:    console.log(element.id);
+:    auth2.attachClickHandler(element, {},
+:        function(googleUser) {
 :            var profile = googleUser.getBasicProfile();
 :            var name=profile.getName();
 :            var email=profile.getEmail();
@@ -74,18 +111,17 @@ class public GoogleLoginWidget extends BBjWidget
 :            var custom=new CustomEvent('custom_event',{bubbles:true,cancelable:true});
 :            custom.myElement='jsfunction'; custom.profileName = name;
 :            custom.email=email; custom.token = token;
-:            var element=document.getElementById('myP');
-:            window.basisDispatchCustomEvent(element,custom);}"
-
-
-        #HtmlView!.injectScript(scr$,1)
-
-
-        #HtmlView!.executeScript("var script = "+doc$+".createElement('script');
-:           script.type = 'text/javascript';
-:           script.src = 'https://apis.google.com/js/platform.js';
-:           "+doc$+".head.appendChild(script)")    
+:            var element=document.getElementById('myGoogleP');
+:            window.basisDispatchCustomEvent(element,custom);
+:        }, function(error) {
+:          console.log(JSON.stringify(error, undefined, 2));
+:        });
+:  }"
+    #HtmlView!.injectScript(scr$,1)
     
+
+         #HtmlView!.clearCallback(BBjAPI.ON_PAGE_LOADED)
+         #HtmlView!.executeScript("startApp();")
     methodend
     
     method public AccountProfile getProfile()
