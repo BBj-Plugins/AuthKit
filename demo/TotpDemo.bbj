@@ -25,10 +25,10 @@ ipn_verify! = wnd!.addInputE(wnd!.getAvailableControlID(),110,350,100,25,$0001$,
 ipn_verify!.setCallback(BBjAPI.ON_EDIT_MODIFY,"clearColor")
 
 
-
-
 btn_verify! = wnd!.addButton(1,10,440,100,25,"Verify Code",$0001$)
 btn_verify!.setCallback(BBjAPI.ON_BUTTON_PUSH,"verifyTotp")
+
+hint! = wnd!.addStaticText(wnd!.getAvailableControlID(),10,500,500,25,"Hint: If your codes don't check OKAY, verify the OS system time on the server where BBj is running.",$0010$)
 
 result_verify! = wnd!.addStaticText(wnd!.getAvailableControlID(),250,350,100,25,"")
 
@@ -81,6 +81,7 @@ verifyTotp:
     else
         result_verify!.setForeColor(red!)
         result_verify!.setText("CODE WRONG")
+        hint!.setVisible(1)
     fi
     
     ipn_verify!.selectAll()
