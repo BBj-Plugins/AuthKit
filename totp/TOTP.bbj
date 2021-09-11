@@ -123,6 +123,9 @@ class public TOTP
     
     
     method public static String getTOTPCode(String secretKey!)
+        if secretKey! = null() then
+            throw "secret can't be NULL!",13
+        fi
         base32! = new Base32()
         bytes! = base32!.decode(secretKey!)
         hexKey! = Hex.encodeHexString(bytes!)
