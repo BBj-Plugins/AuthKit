@@ -1,0 +1,16 @@
+{
+  "name": "AuthKit",
+  "description": "Authentikation and Account Utilities",
+  "version": "0.0.1",
+  "author": "BASIS Europe",
+  "licence": "MIT",
+  "bbj_dependency": "21.10",
+  "screenshots": [],
+  "plugin_dependencies": [
+    {
+      "plugin_name": "BBjWidget",
+      "plugin_version": "1.0",
+      "project_url": "https://github.com/BBj-Plugins/BBjWidget"
+    }
+  ]
+}
