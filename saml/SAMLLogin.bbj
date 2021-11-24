@@ -56,6 +56,13 @@ CLASS PUBLIC SAMLLogin
         
         propfile$=#propfile$
         propfile$=stbl("SAML.PROPFILE",err=*next)
+        
+        param! = context!.getInitParameter("SAML.PROPFILE")
+        if param! <> null() then
+            propfile$=param!
+        endif
+
+        
         is! = new FileInputStream(BBjAPI().getFileSystem().resolvePath(propfile$))
         #prop!= new Properties()
         #prop!.load(is!)

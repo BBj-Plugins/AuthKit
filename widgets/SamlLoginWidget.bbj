@@ -5,7 +5,7 @@ use ::AuthKit/profile/SamlAccountProfile.bbj::SamlAccountProfile
 class public SamlLoginWidget extends BBjWidget
 
     field private BBjHtmlView HtmlView!
-    field public BBjString SamlServletUrl$
+    field public static BBjString SamlServletUrl$
 
     field public static BBjNumber ON_LOGIN = 6777
 

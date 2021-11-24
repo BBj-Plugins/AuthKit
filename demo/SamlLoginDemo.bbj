@@ -5,13 +5,22 @@ sysgui! = BBjAPI().openSysGui("X0")
 wnd! = sysgui!.addWindow(0,0,800,600,"SAML Login Demo")
 wnd!.setCallback(BBjAPI.ON_CLOSE,"byebye")
 
+rem this needs to match the URL that your servlet is running under
+rem see AuthKit/saml/SAMLLogin.bbj
+SamlLoginWidget.setSamlServletUrl("http://localhost:8888/SAMLLogin/")
+
+rem the SAML Login Widget
+rem you could also create this one with a size of 0 / 0 or outside the viewport
+rem if you use the "doLogin()" method (see below)
 wi! = new SamlLoginWidget(wnd!,wnd!.getAvailableControlID(),10,10,250,70)
-wi!.setSamlServletUrl("http://localhost:8888/SAMLLogin/")
 wi!.setCallback(SamlLoginWidget.ON_LOGIN,"onLogin")
 
+rem adding a plain BBj Button that demonstrates how the program could start the login 
+rem without the user clicking into the widget
 btn! = wnd!.addButton(wnd!.getAvailableControlID(),10,100,450,25,"For Demo: direct Login from Code")
 btn!.setCallback(BBjAPI.ON_BUTTON_PUSH,"startLogin")
 
+rem in this CEdit we'll output the data returned by the SAML provider
 ced! = wnd!.addCEdit(wnd!.getAvailableControlID(),10,150,450,400,"")
 
 process_events
@@ -20,6 +29,8 @@ byebye:
     bye
     
 startLogin:
+    rem doLogin() actively starts the procedure
+    rem the user would not have to click inside the widget
     wi!.doLogin()
     return
     
