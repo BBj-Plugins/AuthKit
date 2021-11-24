@@ -4,6 +4,12 @@ use ::AuthKit/widgets/GoogleLoginWidget.bbj::GoogleLoginWidget
 use ::AuthKit/profile/MicrosoftAccountProfile.bbj::MicrosoftAccountProfile
 use ::AuthKit/widgets/MicrosoftLoginWidget.bbj::MicrosoftLoginWidget
 
+if INFO(3,6)<>"6" then 
+    call "WebKit/util/deploy.bbj",err=*next,pgm(-1)
+    a=msgbox("This demo is currently only prepared for DWC!",0,"Can't start demo in this client")
+    release
+fi
+
 sysgui! = BBjAPI().openSysGui("X0")
 wnd! = sysgui!.addWindow(0,0,800,600,"AuthKit Demo")
 wnd!.setCallback(BBjAPI.ON_CLOSE,"byebye")
