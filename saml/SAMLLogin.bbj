@@ -189,7 +189,7 @@ CLASS PUBLIC SAMLLogin
         rem wrapping request object because of this BBj bug report:
         rem Bug 33800 - getParameterMap() in underlying HttpServletRequest of BBxServletRequest returns empty map despite parameters being present
         rem https://bugzilla.basis.com/show_bug.cgi?id=33800
-        wrappedRequest! = new ::/SAMLLogin/WrappedHttpServletRequest.bbj::WrappedHttpServletRequest(bbjReq!, #context!)
+        wrappedRequest! = new ::AuthKit/saml/WrappedHttpServletRequest.bbj::WrappedHttpServletRequest(bbjReq!, #context!)
 
         #auth! = new Auth(#setting!, wrappedRequest!, bbjResp!)
         #auth!.processResponse()
