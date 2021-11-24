@@ -1,0 +1,398 @@
+use java.io.BufferedReader
+use java.io.IOException
+use java.io.UnsupportedEncodingException
+use java.security.Principal
+use java.util.Collection
+use java.util.Enumeration
+use java.util.Locale
+use java.util.Map
+use java.util.HashMap
+
+
+use javax.servlet.AsyncContext
+use javax.servlet.DispatcherType
+use javax.servlet.RequestDispatcher
+use javax.servlet.ServletContext
+use javax.servlet.ServletException
+use javax.servlet.ServletInputStream
+use javax.servlet.ServletRequest
+use javax.servlet.ServletResponse
+use javax.servlet.http.Cookie
+use javax.servlet.http.HttpServletRequest
+use javax.servlet.http.HttpServletResponse
+use javax.servlet.http.HttpSession
+use javax.servlet.http.HttpUpgradeHandler
+use javax.servlet.http.Part
+
+class public WrappedHttpServletRequest implements HttpServletRequest
+
+    field private HttpServletRequest request!
+    field private BBxServletContext context!
+    method public WrappedHttpServletRequest(HttpServletRequest rq!, BBxServletContext context!)
+        #request! = rq!
+        #context! = context!
+        System.out.println(str( #request!.getParameterMap() ))
+        System.out.println(str( #request!.getParameterNames().hasMoreElements() ))
+    methodend
+    
+    method public AsyncContext getAsyncContext() 
+        methodret #request!.getAsyncContext()
+    methodend
+
+    
+    method public Object getAttribute(String arg0!) 
+        methodret #request!.getAttribute(arg0!)
+    methodend
+
+    
+    method public Enumeration getAttributeNames() 
+        methodret #request!.getAttributeNames()
+    methodend
+
+    
+    method public String getCharacterEncoding() 
+        methodret #request!.getCharacterEncoding()
+    methodend
+
+    
+    method public int getContentLength() 
+        methodret #request!.getContentLength()
+    methodend
+
+    
+    method public long getContentLengthLong() 
+        methodret #request!.getContentLengthLong()
+    methodend
+
+    
+    method public String getContentType() 
+        methodret #request!.getContentType()
+    methodend
+
+    
+    method public DispatcherType getDispatcherType() 
+        methodret #request!.getDispatcherType()
+    methodend
+
+    
+    method public ServletInputStream getInputStream()  
+        methodret #request!.getInputStream()
+    methodend
+
+    
+    method public String getLocalAddr() 
+        methodret #request!.getLocalAddr()
+    methodend
+
+    
+    method public String getLocalName() 
+        methodret #request!.getLocalName()
+    methodend
+
+    
+    method public int getLocalPort() 
+        methodret #request!.getLocalPort()
+    methodend
+
+    
+    method public Locale getLocale() 
+        methodret #request!.getLocale()
+    methodend
+
+    
+    method public Enumeration getLocales() 
+        methodret #request!.getLocales()
+    methodend
+
+    
+    method public String getParameter(String arg0!)
+        request! = context!.getRequest()
+        methodret request!.getParameter(arg0!)
+    methodend
+
+    
+    method public Map getParameterMap()
+        hm! = new java.util.HashMap()
+        request! = #context!.getRequest()
+        params! = request!.getParameterNames()
+        it! = params!.iterator()
+        while it!.hasNext()
+            x! = it!.next()
+            p! = request!.getParameter(x!)
+            p_a! = new String[1]
+            p_a![0]=p!
+            hm!.put(x!,p_a!)
+        wend
+        methodret CAST(Map,hm!)
+    methodend
+
+    
+    method public Enumeration getParameterNames() 
+        methodret #request!.getParameterNames()
+    methodend
+
+    
+    method public String[] getParameterValues(String arg0!) 
+        methodret #request!.getParameterValues(arg0!)
+    methodend
+
+    
+    method public String getProtocol() 
+        methodret #request!.getProtocol()
+    methodend
+
+    
+    method public BufferedReader getReader()  
+        methodret #request!.getReader()
+    methodend
+
+    
+    method public String getRealPath(String arg0!) 
+        methodret #request!.getRealPath(arg0!)
+    methodend
+
+    
+    method public String getRemoteAddr() 
+        methodret #request!.getRemoteAddr()
+        methodret null()
+    methodend
+
+    
+    method public String getRemoteHost() 
+        methodret #request!.getRemoteHost() 
+    methodend
+
+    
+    method public int getRemotePort() 
+        methodret #request!.getRemotePort() 
+    methodend
+
+    
+    method public RequestDispatcher getRequestDispatcher(String arg0!) 
+        methodret #request!.getRequestDispatcher(arg0!)
+    methodend
+
+    
+    method public String getScheme() 
+        methodret #request!.getScheme() 
+    methodend
+
+    
+    method public String getServerName() 
+        methodret #request!.getServerName() 
+    methodend
+
+    
+    method public int getServerPort() 
+        methodret #request!.getServerPort()
+    methodend
+
+    
+    method public ServletContext getServletContext() 
+        methodret #request!.getServletContext() 
+    methodend
+
+    
+    method public boolean isAsyncStarted() 
+        methodret #request!.isAsyncStarted() 
+    methodend
+
+    
+    method public boolean isAsyncSupported() 
+        methodret #request!.isAsyncSupported() 
+    methodend
+
+    
+    method public boolean isSecure() 
+        methodret #request!.isSecure()
+    methodend
+
+    
+    method public void removeAttribute(String arg0!) 
+        methodret #request!.removeAttribute(arg0!)
+    methodend
+
+    
+    method public void setAttribute(String arg0!, Object arg1!) 
+        methodret #request!.setAttribute(arg0!,arg1!)
+        
+    methodend
+
+    
+    method public void setCharacterEncoding(String arg0!) 
+        methodret #request!.setCharacterEncoding(arg0!)
+    methodend
+
+    
+    method public AsyncContext startAsync()  
+        methodret #request!.startAsync() 
+    methodend
+
+    
+    method public AsyncContext startAsync(ServletRequest arg0!, ServletResponse arg1!) 
+        methodret #request!.startAsync(arg0!,arg1!) 
+    methodend
+
+    
+    method public boolean authenticate(HttpServletResponse arg0!)
+        methodret #request!.authenticate(arg0!) 
+    methodend
+
+    
+    method public String changeSessionId() 
+        methodret #request!.changeSessionId() 
+    methodend
+
+    
+    method public String getAuthType() 
+        methodret #request!.getAuthType() 
+    methodend
+
+    
+    method public String getContextPath() 
+        methodret #request!.getContextPath() 
+    methodend
+
+    
+    method public Cookie[] getCookies() 
+        methodret #request!.getCookies() 
+    methodend
+
+    
+    method public long getDateHeader(String arg0!) 
+        methodret #request!.getDateHeader(arg0!) 
+    methodend
+
+    
+    method public String getHeader(String arg0!) 
+        methodret #request!.getHeader(arg0!)
+    methodend
+
+    
+    method public Enumeration getHeaderNames() 
+        methodret #request!.getHeaderNames() 
+    methodend
+
+    
+    method public Enumeration getHeaders(String arg0!) 
+        methodret #request!.getHeaders(arg0!)
+    methodend
+
+    
+    method public int getIntHeader(String arg0!) 
+        methodret #request!.getIntHeader(arg0!) 
+    methodend
+
+    
+    method public String getMethod() 
+        methodret #request!.getMethod() 
+    methodend
+
+    
+    method public Part getPart(String arg0!) 
+        methodret #request!.getPart(arg0!) 
+    methodend
+
+    
+    method public Collection getParts() 
+        methodret #request!.getParts() 
+    methodend
+
+    
+    method public String getPathInfo() 
+        methodret #request!.getPathInfo() 
+    methodend
+
+    
+    method public String getPathTranslated() 
+        methodret #request!.getPathTranslated() 
+    methodend
+
+    
+    method public String getQueryString() 
+        System.out.println("getQueryString: "+str(#request!.getQueryString()))
+        methodret #request!.getQueryString()
+    methodend
+
+    
+    method public String getRemoteUser() 
+        methodret #request!.getRemoteUser() 
+    methodend
+
+    
+    method public String getRequestURI() 
+        methodret #request!.getRequestURI() 
+    methodend
+
+    
+    method public StringBuffer getRequestURL() 
+        System.out.println("getRequestURL: "+#request!.getRequestURL().toString())
+        methodret #request!.getRequestURL() 
+    methodend
+
+    
+    method public String getRequestedSessionId() 
+        methodret #request!.getRequestedSessionId() 
+    methodend
+
+    
+    method public String getServletPath() 
+        methodret #request!.getServletPath() 
+    methodend
+
+    
+    method public HttpSession getSession() 
+        methodret #request!.getSession() 
+    methodend
+
+    
+    method public HttpSession getSession(boolean arg0!) 
+        methodret #request!.getSession(arg0!) 
+    methodend
+
+    
+    method public Principal getUserPrincipal() 
+        methodret #request!.getUserPrincipal() 
+    methodend
+
+    
+    method public boolean isRequestedSessionIdFromCookie() 
+        methodret #request!.isRequestedSessionIdFromCookie()
+    methodend
+
+    
+    method public boolean isRequestedSessionIdFromURL() 
+        methodret #request!.isRequestedSessionIdFromURL() 
+    methodend
+
+    
+    method public boolean isRequestedSessionIdFromUrl() 
+        methodret #request!.isRequestedSessionIdFromUrl() 
+    methodend
+
+    
+    method public boolean isRequestedSessionIdValid() 
+        methodret #request!.isRequestedSessionIdValid() 
+    methodend
+
+    
+    method public boolean isUserInRole(String arg0!) 
+        methodret #request!.isUserInRole(arg0!) 
+    methodend
+
+    
+    method public void login(String arg0!, String arg1!) 
+        methodret #request!.login(arg0!,arg1!) 
+    methodend
+
+    
+    method public void logout() 
+        methodret #request!.logout()
+    methodend
+
+    
+    method public Object upgrade(Class arg0!)  
+        methodret #request!.upgrade(arg0!) 
+    methodend
+
+classend
