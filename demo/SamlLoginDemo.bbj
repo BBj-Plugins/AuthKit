@@ -1,0 +1,44 @@
+use ::AuthKit/widgets/SamlLoginWidget.bbj::SamlLoginWidget
+use ::AuthKit/profile/SamlAccountProfile.bbj::SamlAccountProfile
+
+sysgui! = BBjAPI().openSysGui("X0")
+wnd! = sysgui!.addWindow(0,0,800,600,"SAML Login Demo")
+wnd!.setCallback(BBjAPI.ON_CLOSE,"byebye")
+
+wi! = new SamlLoginWidget(wnd!,wnd!.getAvailableControlID(),10,10,250,70)
+wi!.setSamlServletUrl("http://localhost:8888/SAMLLogin/")
+wi!.setCallback(SamlLoginWidget.ON_LOGIN,"onLogin")
+
+btn! = wnd!.addButton(wnd!.getAvailableControlID(),10,100,450,25,"For Demo: direct Login from Code")
+btn!.setCallback(BBjAPI.ON_BUTTON_PUSH,"startLogin")
+
+ced! = wnd!.addCEdit(wnd!.getAvailableControlID(),10,150,450,400,"")
+
+process_events
+
+byebye:
+    bye
+    
+startLogin:
+    wi!.doLogin()
+    return
+    
+onLogin:
+    ev! = BBjAPI().getLastEvent()
+    declare auto SamlAccountProfile profile!
+    profile! = ev!.getObject()
+    txt$=     "Logged in as: "+profile!.getFullName()+$0a$
+    txt$=txt$+"E-Mail:       "+profile!.getEMail()+$0a$
+    txt$=txt$+"FirstName:    "+profile!.getFirstName()+$0a$
+    txt$=txt$+"LastName:     "+profile!.getLastName()+$0a$
+    txt$=txt$+"FullName:     "+profile!.getEMail()+$0a$
+    txt$=txt$+"AuthProvider: "+profile!.getAuthProvider()+$0a$
+    txt$=txt$+"---------------SAML Attributes:--------------"+$0a$
+    attributes! = profile!.getSamlAttributes()
+    it! = attributes!.keySet().iterator()
+    while it!.hasNext()
+        a$=it!.next()
+        txt$=txt$+a$+": "+str(attributes!.get(a$))+$0a$
+    wend
+    ced!.setText(txt$)
+return

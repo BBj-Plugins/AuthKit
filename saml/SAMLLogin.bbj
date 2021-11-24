@@ -1,0 +1,238 @@
+rem this BBx servlet handles the communication with the SAML provider
+rem it uses namespace communication to communicate with the actual application 
+
+rem to publish, you can adjust the folowing parameters, mainly the credentials for BBj Admin
+rem and run it
+
+username$ = "admin"
+password$ = "admin123"
+pathToThisFile$ = pgm(-1)
+mapping$="/SAMLLogin/*"
+
+context! = BBjAPI().getAdmin(username$, password$).getJettyServerConfig().getCustomContext("root")
+context!.removeBBxServlet(mapping$, err=*next)
+context!.addBBxServlet(mapping$, pathToThisFile$, "SAMLLogin", "service", 1) 
+BBjAPI().getAdmin(username$, password$).getJettyServer().getContext("root").restart()
+
+input "deployment successful - continue with CR",*
+release
+
+use com.onelogin.saml2.Auth
+use com.onelogin.saml2.settings.Saml2Settings
+use com.onelogin.saml2.settings.SettingsBuilder
+use java.util.Properties
+use java.util.List
+use java.io.InputStream
+use java.io.FileInputStream
+USE javax.servlet.http.HttpServletRequest
+USE javax.servlet.http.HttpServletResponse
+use java.util.Map
+use java.util.HashMap
+use javax.servlet.http.HttpSession
+
+CLASS PUBLIC SAMLLogin
+
+    field private BBjString propfile$ = "AuthKit/saml/cfg/saml.properties"
+
+    field private BBjString PATH_NAME$
+    
+    field private Auth auth!
+    field private Saml2Settings setting!
+    field private Properties prop!
+    field private BBjNamespace ns!
+    
+    field private BBxServletContext context!
+    
+    METHOD PUBLIC void service(BBxServletContext context!)
+        #context!=context!
+        
+        DECLARE BBxServletRequest request!
+        DECLARE BBxServletResponse response!
+        DECLARE BBjspSessionData data!
+        DECLARE InputStream is!
+        DECLARE Properties prop!
+        DECLARE HttpServletRequest bbjReq!
+        DECLARE HttpServletResponse bbjResp!
+        
+        propfile$=#propfile$
+        propfile$=stbl("SAML.PROPFILE",err=*next)
+        is! = new FileInputStream(BBjAPI().getFileSystem().resolvePath(propfile$))
+        #prop!= new Properties()
+        #prop!.load(is!)
+        is!.close()
+
+        #setting! = new SettingsBuilder().fromProperties(#prop!).build()
+        
+        request! = context!.getRequest()
+        response! = context!.getResponse()
+        
+        bbjReq! = request!.getHttpServletRequest()
+        bbjResp! = response!.getHttpServletResponse()
+        #doIT(bbjReq!,bbjResp!)
+        
+    METHODEND
+    
+     METHOD PUBLIC void doIT(HttpServletRequest bbjReq!, HttpServletResponse bbjResp!)
+        DECLARE BBjString context!
+        context! = ""
+        DECLARE BBjString reqUri!
+        reqUri! = bbjReq!.getRequestURI()
+        DECLARE BBjNumber infoPos!
+        infoPos! = reqUri!.indexOf("/"+context!)
+        
+        if infoPos! < 0 THEN
+            bbjResp!.setStatus(javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST)
+        endif
+        
+        DECLARE BBjString action!
+        action! = reqUri!.substring(infoPos + ("/" + context!).length())
+        while action!.contains("/")
+            action! = action!.substring(action!.indexOf("/")+1)
+        wend
+        if action!.startsWith("/") then
+            action! = action!.substring(1)
+        endif
+        DECLARE BBjString result!
+        result! = null()
+        DECLARE int status!
+        status! = javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST
+        
+        switch action!
+            CASE ""
+                status! = javax.servlet.http.HttpServletResponse.SC_OK
+                result! = #home(bbjReq!,bbjResp!)
+                BREAK
+            CASE "acs"
+                status! = javax.servlet.http.HttpServletResponse.SC_OK
+                result! = #acs(bbjReq!,bbjResp!)
+                BREAK
+            CASE "dologin"
+            CASE "doLogin"
+                status! = javax.servlet.http.HttpServletResponse.SC_OK
+                result! = #doLogin(bbjReq!,bbjResp!)
+                BREAK
+            CASE "metadata"
+                status! = javax.servlet.http.HttpServletResponse.SC_OK
+                result! = #metadata(bbjReq!,bbjResp!)
+                BREAK
+            CASE "sls"
+                rem permanent logout service
+                rem to be implemented within the application if needed
+                BREAK
+            CASE "dologout"
+            CASE "doLogout"
+                status! = javax.servlet.http.HttpServletResponse.SC_OK
+                result! = #doLogout(bbjReq!,bbjResp!)
+                BREAK
+            SWEND
+            
+            response! = #context!.getResponse()
+            response!.setStatus(200)
+            
+            if result! <> null() then
+                response!.getWriter().write(result!)
+                response!.flushBuffer()
+            else
+                response!.getWriter().write("(error)")
+                response!.flushBuffer()
+            endif
+     METHODEND
+     
+     METHOD PRIVATE BBjString home(HttpServletRequest bbjReq!, HttpServletResponse bbjResp!)
+        METHODRET ""
+     METHODEND
+     
+     METHOD PRIVATE BBjString doLogin(HttpServletRequest bbjReq!, HttpServletResponse bbjResp!)
+     
+        #auth! = new Auth(#setting!, bbjReq!, bbjResp!)
+
+        uid$=#context!.getRequest().getParameter("_t",err=*next)
+        if uid$="" then
+            result! = "Invalid call - token UID not provided!"
+        fi
+
+        rem pass the handle to the NameSpace Variable as RelayState
+        #auth!.login(uid$)
+
+        METHODRET "..."
+     METHODEND
+
+     METHOD PRIVATE BBjString doLogout(HttpServletRequest bbjReq!, HttpServletResponse bbjResp!)
+     
+        #auth! = new Auth(#setting!, bbjReq!, bbjResp!)
+
+        #auth!.logout()
+
+        METHODRET "..."
+     METHODEND
+     
+     METHOD PRIVATE BBjString metadata(HttpServletRequest bbjReq!, HttpServletResponse bbjResp!)
+       
+        #auth! = new Auth(#setting!, bbjReq!, bbjResp!)
+        
+        Authsettings! = #auth!.getSettings()
+        Authsettings!.setSPValidationOnly(true)
+
+        metadata! = Authsettings!.getSPMetadata()
+        errors! = #setting!.validateMetadata(metadata!)
+        
+        if errors!.isEmpty() then
+            methodret metadata!
+        else
+            methodret str(errors!)
+       endif
+        
+    METHODEND
+     
+     METHOD PRIVATE BBjString acs(HttpServletRequest bbjReq!, HttpServletResponse bbjResp!)
+        
+        rem wrapping request object because of this BBj bug report:
+        rem Bug 33800 - getParameterMap() in underlying HttpServletRequest of BBxServletRequest returns empty map despite parameters being present
+        rem https://bugzilla.basis.com/show_bug.cgi?id=33800
+        wrappedRequest! = new ::/SAMLLogin/WrappedHttpServletRequest.bbj::WrappedHttpServletRequest(bbjReq!, #context!)
+
+        #auth! = new Auth(#setting!, wrappedRequest!, bbjResp!)
+        #auth!.processResponse()
+
+        sw! = new java.io.StringWriter()
+        
+        if (!#auth!.isAuthenticated()) THEN
+            sw!.append("Not authenticated")
+        endif
+        
+        errors! = #auth!.getErrors()
+        if (!errors!.isEmpty()) then
+            sw!.append("Login Errors:")
+            sw!.append("<p>" + str(errors!) + "</p>")
+            if (#auth!.isDebugActive()) then
+                DECLARE BBjString errorReason!
+                errorReason! = #auth!.getLastErrorReason()
+                if errorReason! <> null() AND errorReason!.isEmpty() then
+                    sw!.append("<p>" + #auth!.getLastErrorReason() + "</p>")
+                endif
+               
+            endif
+            
+        else
+            attributes! = #auth!.getAttributes()
+
+            if attributes!.isEmpty() then
+                sw!.append("Error - no attributes received!")
+            else
+                sw!.append("<html><body onload='window.close();'>Login OK...</body></html>")
+               
+                uid$=#context!.getRequest().getParameter("RelayState")
+                ns! = BBjAPI().getNamespace("SAML.Login",uid$,0)
+                ns!.setValue("logindata",attributes!)
+            endif
+            
+        endif
+        
+        methodret sw!.toString()    
+
+     METHODEND
+    
+CLASSEND
+
+
+

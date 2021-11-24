@@ -16,6 +16,18 @@ class public AccountProfile
     method public BBjString getEMail()
         methodret #EMail!
     methodend
+
+    method public BBjString getLastName()
+        methodret #LastName!
+    methodend
+    
+    method public BBjString getFirstName()
+        methodret #FirstName!
+    methodend    
+
+    method public BBjString getAuthProvider()
+        methodret #AuthProvider!
+    methodend    
     
     method public BBjString getPictureUrl()
         
