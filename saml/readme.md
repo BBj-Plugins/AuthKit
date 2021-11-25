@@ -8,10 +8,13 @@ It uses the `./cfg/sampl.properties` file by default. The version which comes wi
 The code snippet in the top shows the parameters to deploy using the admin API. You can also Enterprise Manager to deploy the servlet on a permanent base.
 
 suggested settings:
-URL Mapping: /SAMLLogin/*
-Source File: <bbxdir>/plugins/AuthKit/saml/SAMLLogin.bbj
-Class Name: SAMLLogin
-Method Name: service
+
+| Field       | Setting                                     |
+| ----------- | ------------------------------------------- |
+| URL Mapping | /SAMLLogin/*                                |
+| Source File | <bbxdir>/plugins/AuthKit/saml/SAMLLogin.bbj |
+| Class Name  | SAMLLogin                                   |
+| Method Name | service                                     |
 
 In order to specify a separate config outside the plug-in folder (which would be overridden by updates!) , you can either 
 * add a line `SET SAML.PROPFILE=/path/to/your/file` to the config.bbx
@@ -35,8 +38,8 @@ The following OID attribute strings will directly be mapped:
 
 | Field     | Attribute Key                     |
 | --------- | --------------------------------- |
-| FirstName | urn:oid:2.5.4.4                   |
-| LastName  | urn:oid:2.5.4.42                  |
+| FirstName | urn:oid:2.5.4.42                  |
+| LastName  | urn:oid:2.5.4.4                   |
 | FullName  | urn:oid:2.16.840.1.113730.3.1.241 |
 | EMail     | urn:oid:0.9.2342.19200300.100.1.3 |
 
