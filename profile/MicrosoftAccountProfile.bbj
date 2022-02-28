@@ -36,12 +36,12 @@ class public MicrosoftAccountProfile extends AccountProfile
         jobj! = new JsonParser().parse(x$)
         
         #AuthProvider!  = "Microsoft"
-        #FirstName!     = #trimQuotes(jobj!.get("givenName").toString())
-        #LastName!      = #trimQuotes(jobj!.get("surname").toString())
-        #FullName!      = #trimQuotes(jobj!.get("displayName").toString())
-        #EMail!         = #trimQuotes(jobj!.get("userPrincipalName").toString())
+        #FirstName!     = #trimQuotes(str(jobj!.get("givenName")))
+        #LastName!      = #trimQuotes(str(jobj!.get("surname")))
+        #FullName!      = #trimQuotes(str(jobj!.get("displayName")))
+        #EMail!         = #trimQuotes(str(jobj!.get("userPrincipalName")))
         if jobj!.get("prferredLanguage") <> null() then
-            #Locale!        = #trimQuotes(jobj!.get("prferredLanguage").toString())
+            #Locale!        = #trimQuotes(str(jobj!.get("prferredLanguage")))
         fi
         
         x$=""
@@ -81,6 +81,7 @@ class public MicrosoftAccountProfile extends AccountProfile
             tmpf! = File.createTempFile("pic-","jpg")
             tmpf!.deleteOnExit()
             p$ = tmpf!.getAbsolutePath()
+            tmpf!.delete() 
             
             ch=unt
             open (ch,mode="O_CREATE,O_TRUNC")p$
