@@ -19,10 +19,10 @@ rem Google
 rem this is a demo account provided by BASIS - don't use for production!
 GoogleLoginWidget.setCLIENTID("862999103108-q9vsolubod0smuupqfhphm3be7jed86p.apps.googleusercontent.com")
 
-GoogleLoginWidget! = new GoogleLoginWidget(wnd!,wnd!.getAvailableControlID(),10,80,180,33)
+GoogleLoginWidget! = new GoogleLoginWidget(wnd!,wnd!.getAvailableControlID(),10,80,180,40)
 GoogleLoginWidget!.setCallback(GoogleLoginWidget.ON_LOGIN,"onGoogleLogin")
 
-GoogleAvatar! = wnd!.addChildWindow(wnd!.getAvailableControlID(),200,70,40,60,"",$00000800$,sysgui!.getAvailableContext())
+GoogleAvatar! = wnd!.addChildWindow(wnd!.getAvailableControlID(),200,70,40,60,"",$00008800$,sysgui!.getAvailableContext())
 GoogleAvatar!.setStyle("height","50px")
 GoogleAvatar!.setStyle("width","50px")
 GoogleAvatar!.setStyle("border-radius","50%")
@@ -56,10 +56,10 @@ rem the demo app is registered to allow for this:
 MicrosoftLoginWidget.setREDIRECTURI("http://localhost:8888/files")
 
 
-MicrosoftLoginWidget! = new MicrosoftLoginWidget(wnd!,wnd!.getAvailableControlID(),10,200,180,33)
+MicrosoftLoginWidget! = new MicrosoftLoginWidget(wnd!,wnd!.getAvailableControlID(),10,200,180,40)
 MicrosoftLoginWidget!.setCallback(MicrosoftLoginWidget.ON_LOGIN,"onMicrosoftLogin")
 
-MicrosoftAvatar! = wnd!.addChildWindow(wnd!.getAvailableControlID(),200,190,60,60,"",$00000800$,sysgui!.getAvailableContext())
+MicrosoftAvatar! = wnd!.addChildWindow(wnd!.getAvailableControlID(),200,190,60,60,"",$00008800$,sysgui!.getAvailableContext())
 MicrosoftAvatar!.setStyle("height","50px")
 MicrosoftAvatar!.setStyle("width","50px")
 MicrosoftAvatar!.setStyle("border-radius","50%")
