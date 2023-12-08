@@ -16,6 +16,7 @@ class public MicrosoftLoginWidget extends BBjWidget
     field public static BBjString AUTHORITY$ = "https://login.microsoftonline.com/common"
     field public static BBjString REDIRECTURI$ = "http://localhost:8888/files"
     
+    field public static BBjNumber AUTOLOGIN = 0
     
 
     method public MicrosoftLoginWidget(BBjWindow wnd!,BBjInt id!)
@@ -104,7 +105,7 @@ class public MicrosoftLoginWidget extends BBjWidget
         #HtmlView!.injectScript(js$,1)
         wait .1
         buffer! = #HtmlView!.executeScript("msalInstance.getAllAccounts();")
-        if str(buffer!) >"[]" then
+        if str(buffer!) >"[]" OR #AUTOLOGIN then
             #HtmlView!.executeAsyncScript("doMicrosoftWidgetLogin();")
         fi
     methodend
