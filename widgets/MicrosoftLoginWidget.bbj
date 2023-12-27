@@ -71,7 +71,7 @@ class public MicrosoftLoginWidget extends BBjWidget
     
     method public void onPageLoaded ( BBjPageLoadedEvent ev! )
          #HtmlView!.clearCallback(BBjAPI.ON_PAGE_LOADED)
-          url$="https://alcdn.msauth.net/browser/2.16.1/js/msal-browser.min.js"
+          url$="https://alcdn.msauth.net/browser/2.35.0/js/msal-browser.min.js"
           script$ = "var link =  $doc.createElement('script');"
           script$ = script$ + "link.setAttribute('type','text/javascript');"
           script$ = script$ + "link.setAttribute('src','"+url$+"');"
