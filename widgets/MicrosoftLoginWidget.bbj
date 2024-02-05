@@ -47,50 +47,37 @@ class public MicrosoftLoginWidget extends BBjWidget
             else
             html$="<html><body><div id='myPMS' style='width:"+str(#W!-10)+"px; height:"+str(#H!-8)+"px;' onClick='doMicrosoftWidgetLogin();'>"+svg$+"</div><button style='display:none' id='mslogout' onClick='doMicrosoftWidgetLogout();'>logout</button></body></html>"
             fi
-            html! = wnd!.addHtmlView(100,0,0,#W!,#H!,"",$0010$)
+            html! = wnd!.addHtmlView(100,0,0,#W!,#H!,html$,$0010$)
             html!.setStyle("position","absolute")
             html!.setStyle("left","0")
             html!.setStyle("right","0")
             html!.setStyle("top","0")            
             
-            html!.setCallback(BBjAPI.ON_PAGE_LOADED,#this!,"onPageLoaded")
+
+            
             html!.setCallback(BBjAPI.ON_NATIVE_JAVASCRIPT,#this!,"onJs")
             html!.setNoEdge(1)
-            html!.setText(html$)
-            #HtmlView! = CAST(BBjHtmlView,html!)
-        FI
-        
-    methodend
+            url$="https://alcdn.msauth.net/browser/2.35.0/js/msal-browser.min.js"
+            script$ = "var link =  $doc.createElement('script');"
+            script$ = script$ + "link.setAttribute('type','text/javascript');"
+            script$ = script$ + "link.setAttribute('src','"+url$+"');"
+            script$ = script$ + "$doc.head.appendChild(link);"
+            html!.executeScript(script$)
 
-    method public void onJs( BBjNativeJavaScriptEvent ev! )
-          buffer! = ev!.getEventMap() 
-          token$=buffer!.get("token")
-          #Profile! = new MicrosoftAccountProfile(token$)
-          #super!.fireEvent(MicrosoftLoginWidget.ON_LOGIN,#Profile!)
-    methodend
-    
-    method public void onPageLoaded ( BBjPageLoadedEvent ev! )
-         #HtmlView!.clearCallback(BBjAPI.ON_PAGE_LOADED)
-          url$="https://alcdn.msauth.net/browser/2.35.0/js/msal-browser.min.js"
-          script$ = "var link =  $doc.createElement('script');"
-          script$ = script$ + "link.setAttribute('type','text/javascript');"
-          script$ = script$ + "link.setAttribute('src','"+url$+"');"
-          script$ = script$ + "$doc.head.appendChild(link);"
-          #HtmlView!.executeScript(script$)
-
-          #HtmlView!.setCallback(BBjAPI.ON_PAGE_LOADED,#this!,"onPageLoaded2")
-    methodend
-
-    
-    method public void onPageLoaded2 ( BBjPageLoadedEvent ev! )
-         #HtmlView!.clearCallback(BBjAPI.ON_PAGE_LOADED)
-         #HtmlView!.setVisible(1)
-         bui = info(3,6)>"4"
+         html!.setVisible(1)
+         bui = info(3,6)="5"
          doc$ = iff(bui,"$doc","document")
          wnd$ = iff(bui,"$wnd","window")
 
+
+        scr$ = "function whenMSalLoaded (callback) { if (typeof msal === 'undefined') {setTimeout (function () {whenMSalLoaded (callback);}, 100);} else { callback (); }}"
+        html!.injectScript(scr$)
+
+        scr$="function doMicrosoftWidgetLogin(){window.msalInstance.loginPopup(window.loginRequest).then(n=>{var t=new CustomEvent(""custom_event"",{bubbles:!0,cancelable:!0});t.myElement=""jsfunction"",t.token=n.accessToken;var e=document.getElementById(""myPMS"");window.basisDispatchCustomEvent(e,t)}).catch(n=>{console.log(n)})}function doMicrosoftWidgetLogout(){msalInstance.logoutPopup()}"
+        html!.injectScript(scr$)
+
         rem minified JS - see AuthKit/lib/js/mslogin.js for source
-        js$="const msalConfig={auth:{clientId:""$$CLIENTID"",authority:""$$AUTHORITY"",redirectUri:""$$REDIRECTURI""},cache:{cacheLocation: 'localStorage',storeAuthStateInCookie: false}};var loginRequest={scopes:[""user.read""]};const msalInstance=new msal.PublicClientApplication(msalConfig);function doMicrosoftWidgetLogin(){msalInstance.loginPopup(loginRequest).then(n=>{var t=new CustomEvent(""custom_event"",{bubbles:!0,cancelable:!0});t.myElement=""jsfunction"",t.token=n.accessToken;var e=document.getElementById(""myPMS"");window.basisDispatchCustomEvent(e,t)}).catch(n=>{console.log(n)})}function doMicrosoftWidgetLogout(){msalInstance.logoutPopup()}"
+        js$="whenMSalLoaded(function() {const msalConfig={auth:{clientId:""$$CLIENTID"",authority:""$$AUTHORITY"",redirectUri:""$$REDIRECTURI""},cache:{cacheLocation: 'localStorage',storeAuthStateInCookie: false}};window.loginRequest={scopes:[""user.read""]};window.msalInstance=new msal.PublicClientApplication(msalConfig); if (window.msalInstance.getAllAccounts().length>0) doMicrosoftWidgetLogin();   });"
         
         while pos("$$CLIENTID"=js$)>0
             js$=js$(1,pos("$$CLIENTID"=js$)-1)+#CLIENTID$+js$(pos("$$CLIENTID"=js$)+10)
@@ -102,14 +89,21 @@ class public MicrosoftLoginWidget extends BBjWidget
             js$=js$(1,pos("$$REDIRECTURI"=js$)-1)+#REDIRECTURI$+js$(pos("$$REDIRECTURI"=js$)+13)
         wend
 
-        #HtmlView!.injectScript(js$,1)
-        wait .1
-        buffer! = #HtmlView!.executeScript("msalInstance.getAllAccounts();")
-        if str(buffer!) >"[]" OR #AUTOLOGIN then
-            #HtmlView!.executeAsyncScript("doMicrosoftWidgetLogin();")
-        fi
+        html!.injectScript(js$,1)
+        #HtmlView! = CAST(BBjHtmlView,html!)
+        FI
+
     methodend
     
+
+    method public void onJs( BBjNativeJavaScriptEvent ev! )
+        buffer! = ev!.getEventMap() 
+        token$=buffer!.get("token")
+        #Profile! = new MicrosoftAccountProfile(token$)
+        #super!.fireEvent(MicrosoftLoginWidget.ON_LOGIN,#Profile!)
+    methodend
+
+
     method public AccountProfile getProfile()
         methodret #Profile!
     methodend
