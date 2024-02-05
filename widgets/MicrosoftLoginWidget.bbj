@@ -71,10 +71,10 @@ class public MicrosoftLoginWidget extends BBjWidget
 
 
         scr$ = "function whenMSalLoaded (callback) { if (typeof msal === 'undefined') {setTimeout (function () {whenMSalLoaded (callback);}, 100);} else { callback (); }}"
-        html!.injectScript(scr$)
+        html!.injectScript(scr$,1)
 
         scr$="function doMicrosoftWidgetLogin(){window.msalInstance.loginPopup(window.loginRequest).then(n=>{var t=new CustomEvent(""custom_event"",{bubbles:!0,cancelable:!0});t.myElement=""jsfunction"",t.token=n.accessToken;var e=document.getElementById(""myPMS"");window.basisDispatchCustomEvent(e,t)}).catch(n=>{console.log(n)})}function doMicrosoftWidgetLogout(){msalInstance.logoutPopup()}"
-        html!.injectScript(scr$)
+        html!.injectScript(scr$,1)
 
         rem minified JS - see AuthKit/lib/js/mslogin.js for source
         js$="whenMSalLoaded(function() {const msalConfig={auth:{clientId:""$$CLIENTID"",authority:""$$AUTHORITY"",redirectUri:""$$REDIRECTURI""},cache:{cacheLocation: 'localStorage',storeAuthStateInCookie: false}};window.loginRequest={scopes:[""user.read""]};window.msalInstance=new msal.PublicClientApplication(msalConfig); if (window.msalInstance.getAllAccounts().length>0) doMicrosoftWidgetLogin();   });"
