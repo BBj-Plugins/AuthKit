@@ -69,12 +69,16 @@ class public GoogleLoginWidget extends BBjWidget
             #HtmlView! = CAST(BBjHtmlView,html!)
 
             scr$="function myLogin(response){
+:           window.google = google;                
 :            var custom=new CustomEvent('custom_event',{bubbles:true,cancelable:true});
 :            custom.myElement='jsfunction'; custom.credential = response.credential;
-:            var element="+doc$+".getElementById('g_id_onload');
-:            "+wnd$+".basisDispatchCustomEvent(element,custom);
+:            var element=document.getElementById('g_id_onload');
+:            window.basisDispatchCustomEvent(element,custom);
 :            }"        
             #HtmlView!.injectScript(scr$,1)
+
+            script$ = "function revoke(parameter1){google.accounts.id.revoke(parameter1);}"
+            #HtmlView!.injectScript(script$,1)
 
             #HtmlView!.executeScript("var script = "+doc$+".createElement('script');
 :           script.type = 'text/javascript';
@@ -88,7 +92,6 @@ class public GoogleLoginWidget extends BBjWidget
           buffer! = ev!.getEventMap() 
           credential$=buffer!.get("credential")
           #Profile! = new GoogleAccountProfile(credential$, #CLIENTID$)
-
           #super!.fireEvent(GoogleLoginWidget.ON_LOGIN,#Profile!)
     methodend
     
@@ -98,7 +101,7 @@ class public GoogleLoginWidget extends BBjWidget
     methodend
     
     method public void logout()
-            #HtmlView!.executeScript("google.accounts.id.revoke('"+#Profile!.getEMail()+"', done => {console.log('consent revoked');});")
+            #HtmlView!.executeScript("revoke('"+#Profile!.getEMail()+"');")
             #Profile! = null()
     methodend
     
