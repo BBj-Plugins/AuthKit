@@ -1,18 +1,39 @@
 use ::AuthKit/profile/AccountProfile.bbj::AccountProfile
 
+use com.google.api.client.googleapis.auth.oauth2.GoogleIdToken
+use com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload
+use com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier
+
+use com.google.api.client.http.javanet.NetHttpTransport
+use com.google.api.client.json.gson.GsonFactory
+
+use java.util.Collections
+
 class public GoogleAccountProfile extends AccountProfile
 
     method private GoogleAccountProfile()
     methodend
 
-    method public GoogleAccountProfile(com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload payload!)
+    method public GoogleAccountProfile(String idTokenString!, String clientid!)
+
+    verifier! = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory()).setAudience(Collections.singletonList(clientid!)).build()
+
+    idToken! = verifier!.verify(idTokenString!)
+    if (idToken! <> null()) then
+    payload! = idToken!.getPayload()
+
+        userId! = payload!.getSubject()
         #FirstName!     = str(payload!.get("given_name"))
         #LastName!      = str(payload!.get("family_name"))
         #FullName!      = str(payload!.get("name"))
-        #EMail!         = str(payload!.get("email"))
+        #EMail!         = str(payload!.getEmail())
         #Locale!        = str(payload!.get("locale"))
         #PictureUrl!    = str(payload!.get("picture"))
         #AuthProvider!  = "Google"
+    else
+        throw "Google Profile Invalid or expired!",11
+    fi
+
     methodend
 
     

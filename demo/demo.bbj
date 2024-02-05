@@ -4,9 +4,9 @@ use ::AuthKit/widgets/GoogleLoginWidget.bbj::GoogleLoginWidget
 use ::AuthKit/profile/MicrosoftAccountProfile.bbj::MicrosoftAccountProfile
 use ::AuthKit/widgets/MicrosoftLoginWidget.bbj::MicrosoftLoginWidget
 
-if INFO(3,6)<>"6" then 
+if INFO(3,6)<"5" then 
     call "WebKit/util/deploy.bbj",err=*next,pgm(-1)
-    a=msgbox("This demo is currently only prepared for DWC!",0,"Can't start demo in this client")
+    a=msgbox("This demo is currently only prepared for DWC or BUI!",0,"Can't start demo in this client")
     release
 fi
 
@@ -17,7 +17,7 @@ wnd!.setCallback(BBjAPI.ON_CLOSE,"byebye")
 rem Google
 
 rem this is a demo account provided by BASIS - don't use for production!
-GoogleLoginWidget.setCLIENTID("862999103108-q9vsolubod0smuupqfhphm3be7jed86p.apps.googleusercontent.com")
+GoogleLoginWidget.setCLIENTID("1004589495097-skhe0nefe69b0kpjmbmmgbk8hocfj7m4.apps.googleusercontent.com")
 
 GoogleLoginWidget! = new GoogleLoginWidget(wnd!,wnd!.getAvailableControlID(),10,80,180,40)
 GoogleLoginWidget!.setCallback(GoogleLoginWidget.ON_LOGIN,"onGoogleLogin")

@@ -32,25 +32,33 @@ class public GoogleLoginWidget extends BBjWidget
         wnd! = #getCanvas()
         
         if f_init!>0 then
-        
-            ch=unt
-            open (ch)"AuthKit/lib/svg/google.svg"
-            read record (ch,siz=dec(fin(ch)(1,4)))svg$
-            close (ch)
 
-            if #H! = null() then
-            html$ = "<html><body>
-:           <div style='width:100%; height:100%;' id='myGoogleP'>"+svg$+"</div>
-:           <button style='width:1px; height:1px;display:none;' id='logout' onClick='gapi.auth2.getAuthInstance().disconnect();'>logout</button>
-:           </body></html>"            
-            else
-            html$ = "<html><body>
-:           <div style='width:"+str(#W!-10)+"px; height:"+str(#H!-8)+"px;' id='myGoogleP'>"+svg$+"</div>
-:           <button style='width:1px; height:1px;display:none;' id='logout' onClick='gapi.auth2.getAuthInstance().disconnect();'>logout</button>
-:           </body></html>"
-            fi
+        bui = info(3,6)="5"
+        doc$ = iff(bui,"$doc","document")
+        wnd$ = iff(bui,"$wnd","window")
 
-            html! = wnd!.addHtmlView(100,0,0,#W!,#H!,"")
+
+
+        html$ = "<html><body>
+:     <div id='g_id_onload'
+:            data-context='signin'
+:            data-client_id='"+#CLIENTID$+"'
+:            data-ux_mode='popup'
+:            data-callback='myLogin'
+:            data-auto_select='true'
+:            data-itp_support='true'>
+:       </div>
+:       
+:       <div class='g_id_signin'
+:            data-type='standard'
+:            data-shape='rectangular'
+:            data-theme='outline'
+:            data-text='signin_with'
+:            data-size='small'
+:            data-logo_alignment='left'>
+:       </div>"
+
+            html! = wnd!.addHtmlView(100,0,0,#W!,#H!,html$)
             html!.setStyle("position","absolute")
             html!.setStyle("left","0")
             html!.setStyle("right","0")
@@ -58,88 +66,39 @@ class public GoogleLoginWidget extends BBjWidget
             
             html!.setNoEdge(1)
             html!.setCallback(BBjAPI.ON_NATIVE_JAVASCRIPT,#this!,"onJs")
-            html!.setCallback(BBjAPI.ON_PAGE_LOADED,#this!,"onPageLoaded")
-            html!.setText(html$)
             #HtmlView! = CAST(BBjHtmlView,html!)
+
+            scr$="function myLogin(response){
+:            var custom=new CustomEvent('custom_event',{bubbles:true,cancelable:true});
+:            custom.myElement='jsfunction'; custom.credential = response.credential;
+:            var element="+doc$+".getElementById('g_id_onload');
+:            "+wnd$+".basisDispatchCustomEvent(element,custom);
+:            }"        
+            #HtmlView!.injectScript(scr$,1)
+
+            #HtmlView!.executeScript("var script = "+doc$+".createElement('script');
+:           script.type = 'text/javascript';
+:           script.src = 'https://accounts.google.com/gsi/client';
+:           "+doc$+".head.appendChild(script)")  
         FI
         
     methodend
 
     method public void onJs( BBjNativeJavaScriptEvent ev! )
           buffer! = ev!.getEventMap() 
-          token$=buffer!.get("token")
-          token! = GoogleIdToken.parse(new JacksonFactory(), token$)
-          payload! = token!.getPayload()
-          #Profile! = new GoogleAccountProfile(payload!)
+          credential$=buffer!.get("credential")
+          #Profile! = new GoogleAccountProfile(credential$, #CLIENTID$)
+
           #super!.fireEvent(GoogleLoginWidget.ON_LOGIN,#Profile!)
     methodend
     
-    method public void onPageLoaded ( BBjPageLoadedEvent ev! )
-         #HtmlView!.clearCallback(BBjAPI.ON_PAGE_LOADED)
-         #HtmlView!.setCallback(BBjAPI.ON_PAGE_LOADED,#this!,"onPageLoaded2")
-
-            bui = info(3,6)>"4"
-            doc$ = iff(bui,"$doc","document")
-            wnd$ = iff(bui,"$wnd","window")
-            #HtmlView!.executeScript("var script = "+doc$+".createElement('script');
-:           script.type = 'text/javascript';
-:           script.src = 'https://apis.google.com/js/api:client.js';
-:           "+doc$+".head.appendChild(script)")            
-         wait .2
-    
-    methodend
-    
-    method public void onPageLoaded2 ( BBjPageLoadedEvent ev! )         
-         
-         bui = info(3,6)>"4"
-         doc$ = iff(bui,"$doc","document")
-         wnd$ = iff(bui,"$wnd","window")
-
-        
-        #HtmlView!.injectScript(scr$,1)
-
-scr$="  var googleUser = {};
-:  var startApp = function() {
-:    gapi.load('auth2', function(){
-:      auth2 = gapi.auth2.init({
-:        client_id: '"+#CLIENTID$+"',
-:        cookiepolicy: 'single_host_origin',
-:      });
-:      attachSignin(document.getElementById('myGoogleP'));
-:    });
-:  };
-:
-:  function attachSignin(element) {
-:    console.log(element.id);
-:    auth2.attachClickHandler(element, {},
-:        function(googleUser) {
-:            var profile = googleUser.getBasicProfile();
-:            var name=profile.getName();
-:            var email=profile.getEmail();
-:            var token = googleUser.getAuthResponse().id_token;
-:            var custom=new CustomEvent('custom_event',{bubbles:true,cancelable:true});
-:            custom.myElement='jsfunction'; custom.profileName = name;
-:            custom.email=email; custom.token = token;
-:            var element=document.getElementById('myGoogleP');
-:            window.basisDispatchCustomEvent(element,custom);
-:        }, function(error) {
-:          console.log(JSON.stringify(error, undefined, 2));
-:        });
-:  }"
-    #HtmlView!.injectScript(scr$,1)
-    
-
-         #HtmlView!.clearCallback(BBjAPI.ON_PAGE_LOADED)
-         #HtmlView!.executeScript("startApp();")
-    methodend
-    
+   
     method public AccountProfile getProfile()
         methodret #Profile!
     methodend
     
     method public void logout()
-            #HtmlView!.executeScript("gapi.auth2.getAuthInstance().disconnect();")
-            #HtmlView!.executeScript("$doc.getElementById('logout').click();")
+            #HtmlView!.executeScript("google.accounts.id.revoke('"+#Profile!.getEMail()+"', done => {console.log('consent revoked');});")
             #Profile! = null()
     methodend
     
