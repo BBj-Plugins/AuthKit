@@ -101,8 +101,10 @@ class public GoogleLoginWidget extends BBjWidget
     methodend
     
     method public void logout()
-            #HtmlView!.executeScript("revoke('"+#Profile!.getEMail()+"');")
-            #Profile! = null()
+            if #Profile! <> null() then
+                #HtmlView!.executeScript("revoke('"+#Profile!.getEMail()+"');")
+                #Profile! = null()
+            fi
     methodend
     
 classend
